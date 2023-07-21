@@ -14,8 +14,8 @@ TMP_PATH = Path(__file__).parent / 'tmp'
 class Song(BaseModel):
     bv: str
     name: str
-    album_name = 'Carol'
-    atrist = '珈乐'
+    album_name: str
+    artist: str
     
     # 後から取得
     cover_url: str | None
@@ -32,10 +32,10 @@ def get_tmp_path(song: Song) -> str:
     return str(TMP_PATH / song.bv)
 
 
-def get_song_from_bv(bv, name) -> Song:
+def get_song_from_bv(bv, name, album_name='Carol', artist='珈乐') -> Song:
     # bilibili apiを使い、情報を取得
     info_data: dict = requests.get(f'https://api.bilibili.com/x/web-interface/view?bvid={bv}').json()['data']
-    song = Song(bv=bv, name=name)
+    song = Song(bv=bv, name=name, album_name=album_name, artist=artist)
     pub_timestamp = int(info_data.get('pubdate'))
     song.date = dt.date.fromtimestamp(pub_timestamp)
     song.cover_url = info_data.get('pic')
@@ -97,7 +97,7 @@ def pull_song(song: Song) -> None:
     m4a.tags['\xa9nam'] = [song.name]
 
     # artist
-    m4a.tags['\xa9ART'] = [song.atrist]
+    m4a.tags['\xa9ART'] = [song.artist]
 
     m4a.save()
         
@@ -105,6 +105,10 @@ def pull_song(song: Song) -> None:
 if __name__ == '__main__':
     while True:
         bv, name = input('bv: '), input('name: ')
-        song = get_song_from_bv(bv, name)
+        album_name = input('album_name:[Carol] ')
+        album_name = album_name if album_name else 'Carol'
+        artist = input('artist:[珈乐] ')
+        artist = artist if artist else '珈乐'
+        song = get_song_from_bv(bv, name, album_name, artist)
         pull_song(song)
         print('ok, next')
